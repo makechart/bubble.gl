@@ -9,8 +9,8 @@
   "author": "zbryikt",
   "license": "MIT",
   "dependencies": {
-    "@plotdb/srcbuild": "^0.0.69",
-    "fedep": "1.6.0",
+    "@plotdb/srcbuild": "^0.0.70",
+    "fedep": "1.7.3",
     "livescript": "^1.6.0"
   }
 }
