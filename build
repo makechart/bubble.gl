@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-rm -rf dist
-mkdir -p dist
-echo "build src/index.pug -> dist/index.html ..."
-npx srcbuild-pug src/index.pug -o dist/index.html
-
-echo "done."
