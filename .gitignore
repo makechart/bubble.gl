@@ -1,0 +1,5 @@
+.*.swp
+secret.*
+*.key
+node_modules
+web/static/assets/lib
