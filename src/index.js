@@ -7,7 +7,7 @@
 var mod;
 module.exports = {
   pkg: {
-    name: '@makechart/bubble.gl', version: '0.0.1',
+    name: '@makechart/bubble.gl', version: '0.0.2',
     syncInit: true,
     extend: {ns: 'local', name: 'echarts', path: 'common', version: 'main'},
     dependencies: [
@@ -177,21 +177,35 @@ mod = function(o) {
     return [f(0), f(8), f(4)];
   }
 
-  function parseColor(c) {
-    if(!c) { return null; }
-    if(typeof(ldcolor) != 'undefined' && ldcolor.web) { c = ldcolor.web(c); }
-    if(typeof(c) == 'string') {
-      var re = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(c);
-      if(re) { return [parseInt(re[1], 16) / 255, parseInt(re[2], 16) / 255, parseInt(re[3], 16) / 255]; }
-      re = /^rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(c);
-      if(re) { return [+re[1] / 255, +re[2] / 255, +re[3] / 255]; }
+  // 回傳 [r,g,b,a] ( 0~1 ); 支援 #rrggbb / #rrggbbaa / rgb() / rgba() / transparent
+  function parseWeb(c) {
+    if(typeof(c) != 'string') { return null; }
+    if(c == 'transparent') { return [0, 0, 0, 0]; }
+    var re = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?/i.exec(c);
+    if(re) {
+      return [
+        parseInt(re[1], 16) / 255, parseInt(re[2], 16) / 255, parseInt(re[3], 16) / 255,
+        re[4] != null ? parseInt(re[4], 16) / 255 : 1
+      ];
+    }
+    re = /^rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)([,\s/]+([\d.]+%?))?/.exec(c);
+    if(re) {
+      var a = 1;
+      if(re[5] != null) { a = /%$/.test(re[5]) ? parseFloat(re[5]) / 100 : parseFloat(re[5]); }
+      return [+re[1] / 255, +re[2] / 255, +re[3] / 255, a];
     }
     return null;
+  }
+  function parseColor(c) {
+    if(!c) { return null; }
+    var p = parseWeb(c);
+    if(!p && typeof(ldcolor) != 'undefined' && ldcolor.web) { p = parseWeb(ldcolor.web(c)); }
+    return p;
   }
 
   // 內部狀態 ( closure, 不放 chart context )
   var dpr = window.devicePixelRatio || 1;
-  var bg = [0.063, 0.078, 0.102];   // 背景色 ( config: background )
+  var bg = [1, 1, 1, 1];   // 背景色 rgba ( config: background, a=0 為透明 )
   var pad = 8;                       // bubble 間距 ( config: bubble.padding )
   var anchorMode = 'orbit';          // 群心佈局 ( config: dynamics.anchor )
   var canvas = null, tip = null, gl = null;
@@ -388,7 +402,8 @@ mod = function(o) {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(bg[0], bg[1], bg[2], 1);
+    // canvas 為 premultiplied alpha, clear color 也要 premultiply
+    gl.clearColor(bg[0] * bg[3], bg[1] * bg[3], bg[2] * bg[3], bg[3]);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -420,7 +435,7 @@ mod = function(o) {
     var px8 = new Uint8Array(4);
     gl.readPixels(
       Math.min(canvas.width - 1, Math.max(0, Math.round(mx * dpr))),
-      Math.min(canvas.height - 1, Math.max(0, Math.round(canvas.height - my * dpr))),
+      Math.min(canvas.height - 1, Math.max(0, Math.round(canvas.height - 1 - my * dpr))),
       1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px8
     );
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -428,9 +443,11 @@ mod = function(o) {
   }
 
   function onMove(e) {
+    // 世界座標 != canvas 顯示座標 ( root 可能有 padding, 或整體被 CSS transform 縮放 ),
+    // 以 rect 比例換算; tooltip 定位在 root 座標系, 用 root rect 換算
     var rect = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - rect.left;
-    mouse.y = e.clientY - rect.top;
+    mouse.x = (e.clientX - rect.left) * (Wc / (rect.width || Wc));
+    mouse.y = (e.clientY - rect.top) * (Hc / (rect.height || Hc));
     mouse.over = true;
     if(mouse.down || !parsed) { tip.style.display = 'none'; return; }
     var now = performance.now();
@@ -438,10 +455,11 @@ mod = function(o) {
     lastPick = now;
     var id = doPick(mouse.x, mouse.y);
     if(id >= 0 && id < parsed.names.length) {
+      var rrect = root.getBoundingClientRect();
       tip.textContent = parsed.names[id] + '\ncategory: ' +
         parsed.catNames[parsed.cats[id]] + '\nsize: ' + parsed.sizes[id];
-      tip.style.left = (mouse.x + 14) + 'px';
-      tip.style.top = (mouse.y + 14) + 'px';
+      tip.style.left = (e.clientX - rrect.left + 14) + 'px';
+      tip.style.top = (e.clientY - rrect.top + 14) + 'px';
       tip.style.display = 'block';
     } else {
       tip.style.display = 'none';
@@ -470,7 +488,7 @@ mod = function(o) {
     },
     config: {
       palette: {type: 'palette'},
-      background: {type: 'color', default: '#10141a'},
+      background: {type: 'color', default: '#ffffff'},
       bubble: {
         padding: {name: "bubble padding", type: 'number', default: 8, min: 0, max: 40, step: 1}
       },
@@ -505,7 +523,8 @@ mod = function(o) {
         'font:12px/1.5 monospace', 'color:#dfe8f2', 'white-space:pre', 'z-index:10'
       ].join(';');
       root.appendChild(tip);
-      gl = canvas.getContext('webgl2', {antialias: false, alpha: false});
+      // alpha: 支援透明背景; preserveDrawingBuffer: 讓 toDataURL/toBlob 匯出可隨時讀取
+      gl = canvas.getContext('webgl2', {antialias: false, alpha: true, preserveDrawingBuffer: true});
       if(!gl) { throw new Error("bubble.gl: WebGL2 not supported"); }
       if(!gl.getExtension('EXT_color_buffer_float')) {
         throw new Error("bubble.gl: EXT_color_buffer_float not supported");
