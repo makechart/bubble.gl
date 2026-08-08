@@ -1,1 +1,1 @@
-{"name":"@makechart/bubble.gl","version":"0.0.1","description":"GPGPU force layout bubble chart - 100k+ points, WebGL2","scripts":{"build":"./build"},"keywords":[],"author":"zbryikt","license":"MIT","dependencies":{"@plotdb/srcbuild":"^0.0.70","fedep":"1.7.3","livescript":"^1.6.0"}}
+{"name":"@makechart/bubble.gl","version":"0.0.2","description":"GPGPU force layout bubble chart - 100k+ points, WebGL2","scripts":{"build":"./build"},"keywords":[],"author":"zbryikt","license":"MIT","dependencies":{"@plotdb/srcbuild":"^0.0.70","fedep":"1.7.3","livescript":"^1.6.0"}}
