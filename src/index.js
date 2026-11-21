@@ -487,14 +487,15 @@ mod = function(o) {
       };
     },
     config: {
-      palette: {type: 'palette'},
+      palette: {type: 'palette', desc: {en: "colors for the categories, assigned in the order they first appear in the data", "zh-TW": "各類別的配色，依類別在資料中第一次出現的順序套用"}},
       background: {type: 'color', default: '#ffffff'},
       bubble: {
-        padding: {name: "bubble padding", type: 'number', default: 8, min: 0, max: 40, step: 1}
+        padding: {name: "bubble padding", type: 'number', default: 8, min: 0, max: 40, step: 1, desc: {en: "extra room each bubble keeps from its neighbors when they push apart, in px", "zh-TW": "泡泡互相推開時，每顆周圍多保留的空間 ( px )"}}
       },
       dynamics: {
         anchor: {
           name: "Anchor Layout", type: 'choice', default: 'orbit',
+          desc: {en: "where each category gathers: orbit on a slowly turning ring, circular on a still ring, array in a grid, center all in the middle", "zh-TW": "各類別聚集的位置：orbit 在緩慢旋轉的圓環上，circular 在固定的圓環上，array 排成格狀，center 全部集中在中間"},
           values: [
             {name: "Orbit", value: 'orbit'},
             {name: "Circular", value: 'circular'},
