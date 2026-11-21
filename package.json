@@ -1,6 +1,6 @@
 {
   "name": "@makechart/bubble.gl",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "GPGPU force layout bubble chart - 100k+ points, WebGL2",
   "scripts": {
     "build": "./build"
