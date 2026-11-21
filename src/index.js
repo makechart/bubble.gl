@@ -505,6 +505,11 @@ mod = function(o) {
         }
       }
     },
+    // 段落 ( tab ) 的說明, key 是段落的路徑 ( 需要 @plotdb/chart >= 3.17.0 ). 共用的 common 由核心補
+    tabinfo: {
+      bubble: {desc: {en: "spacing between the bubbles", "zh-TW": "泡泡之間的間距"}},
+      dynamics: {desc: {en: "where the bubbles of each category gather", "zh-TW": "各類別的泡泡聚集的位置"}}
+    },
     dimension: {
       size: {type: 'R', name: "size", priority: 1},
       category: {type: 'C', name: "category", priority: 2},

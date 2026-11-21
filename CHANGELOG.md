@@ -1,5 +1,9 @@
 # Change Logs
 
+## v0.0.4
+
+ - add `tabinfo`: descriptions ( en / zh-TW ) of the config sections, shown on the section tabs in the makechart style panel ( needs @plotdb/chart >= 3.17.0 )
+
 ## v0.0.3
 
  - add `desc` ( en / zh-TW ) to the config items, shown under the label in the makechart style panel
